@@ -1,559 +1,501 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WUWA - 시스템 연동형 내러티브 설계 분석</title>
-    <!-- Fonts: Pretendard for body, Playfair Display for headings -->
-    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
-    
-    <style>
-        /* ===== GLOBAL VARIABLES ===== */
-        :root {
-            --bg-base: #0b0c15;
-            --bg-gradient: linear-gradient(to bottom, #0b0c15, #13111c, #0b0c15);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent-cyan: #a8d8ff;
-            --accent-purple: #d8a8ff;
-            --card-bg: linear-gradient(135deg, rgba(33, 33, 44, 0.4) 0%, rgba(20, 20, 30, 0.6) 100%);
-            --card-border: rgba(168, 216, 255, 0.15);
-            --card-hover-border: rgba(168, 216, 255, 0.4);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            font-family: 'Pretendard', sans-serif;
-            background: var(--bg-gradient);
-            color: var(--text-main);
-            line-height: 1.8;
-            overflow-x: hidden;
-            background-attachment: fixed;
-        }
-
-        .font-playfair { font-family: 'Playfair Display', serif; }
-
-        /* ===== UTILITIES ===== */
-        .gradient-text {
-            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 50%, var(--accent-cyan) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            background-size: 200% auto;
-            animation: gradientShift 5s ease infinite;
-        }
-
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* ===== HERO SECTION ===== */
-        .hero {
-            position: relative;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            overflow: hidden;
-        }
-        .hero-bg {
-            position: absolute;
-            inset: 0;
-            background: url('https://hw-media-cdn-mingchao.kurogame.com/object/1770220800000/ginxxvuif59erjxbtj-1770259205730.jpg') center/cover;
-            background-attachment: fixed;
-            z-index: -2;
-        }
-        .hero-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to bottom, rgba(11,12,21,0.3) 0%, rgba(11,12,21,0.8) 70%, #0b0c15 100%);
-            z-index: -1;
-        }
-        .hero-content {
-            z-index: 10;
-            max-width: 900px;
-            padding: 0 20px;
-            animation: fadeInUp 1s ease-out forwards;
-        }
-        .hero-title {
-            font-size: 4.5rem;
-            font-weight: 900;
-            line-height: 1.2;
-            margin-bottom: 1.5rem;
-background:linear-gradient(135deg, rgb(168, 216, 255) 0%, rgb(216, 168, 255) 50%, rgb(168, 216, 255) 100%) text;
-text-shadow: 0 2px 4px #0000004d;
-        }
-        .hero-subtitle {
-            font-size: 2.0rem;
-            color: var(--text-muted);
-            margin-bottom: 2.5rem;
-            font-weight: 400;
-        }
-        .hero-buttons { display: flex; gap: 15px; justify-content: center; margin-bottom: 3rem; }
-        .btn {
-            padding: 14px 32px;
-            border-radius: 6px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-        }
-        .btn-primary {
-            background: var(--accent-cyan);
-            color: #000;
-            border: none;
-        }
-        .btn-primary:hover { background: #fff; transform: translateY(-2px); }
-        .btn-outline {
-            background: transparent;
-            color: var(--accent-cyan);
-            border: 1px solid var(--accent-cyan);
-        }
-        .btn-outline:hover { background: rgba(168, 216, 255, 0.1); transform: translateY(-2px); }
-
-        .bounce-arrow {
-            width: 30px; height: 30px;
-            border-bottom: 3px solid var(--accent-cyan);
-            border-right: 3px solid var(--accent-cyan);
-            transform: rotate(45deg);
-            margin: 0 auto;
-            animation: bounce 2s infinite;
-        }
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0) rotate(45deg); }
-            40% { transform: translateY(-15px) rotate(45deg); }
-            60% { transform: translateY(-7px) rotate(45deg); }
-        }
-
-        /* ===== MAIN CONTENT & SECTIONS ===== */
-        .section {
-            padding: 120px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .section-title {
-            font-size: 2.8rem;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 4rem;
-            color: var(--accent-purple);
-        }
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
-        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 30px; }
-        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
-
-        /* ===== CARDS (Glassmorphism) ===== */
-        .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 40px 30px;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .card:hover {
-            border-color: var(--card-hover-border);
-            transform: translateY(-8px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), 0 0 20px rgba(168, 216, 255, 0.1);
-        }
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--accent-cyan);
-            margin-bottom: 1rem;
-        }
-        .card-text { color: var(--text-muted); font-size: 1.1rem; }
-
-        /* Banner Card (Full width) */
-        .banner-card {
-            background: linear-gradient(to right, rgba(168,216,255,0.05), rgba(216,168,255,0.05));
-            border-left: 4px solid var(--accent-purple);
-            padding: 40px;
-            border-radius: 8px;
-            margin-top: 30px;
-        }
-
-        /* ===== TIMELINE ===== */
-        .timeline { position: relative; padding-left: 40px; margin-top: 2rem; }
-        .timeline::before {
-            content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px;
-            background: linear-gradient(to bottom, var(--accent-cyan), var(--accent-purple));
-        }
-        .timeline-item { position: relative; margin-bottom: 3rem; }
-        .timeline-item::after {
-            content: ''; position: absolute; left: -36px; top: 6px; width: 14px; height: 14px;
-            background: var(--bg-base); border: 3px solid var(--accent-cyan); border-radius: 50%;
-            box-shadow: 0 0 10px var(--accent-cyan);
-        }
-        .timeline-time { color: var(--accent-purple); font-weight: 700; font-size: 1.2rem; margin-bottom: 0.5rem; display: block; }
-        .timeline-desc { color: var(--text-muted); font-size: 1.1rem; }
-
-        /* ===== LISTS & TABLES ===== */
-        .custom-list { list-style: none; padding-left: 0; }
-        .custom-list li { position: relative; padding-left: 20px; margin-bottom: 10px; color: var(--text-muted); font-size: 1.1rem; }
-        .custom-list li::before { content: '✦'; position: absolute; left: 0; color: var(--accent-cyan); font-size: 0.9rem; top: 3px; }
-
-        .flag-row {
-            display: grid; grid-template-columns: 200px 1fr; gap: 20px;
-            padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center;
-        }
-        .flag-name { color: var(--accent-cyan); font-weight: 700; font-family: 'Playfair Display', serif; font-size: 1.2rem; letter-spacing: 1px; }
-
-        /* ===== ANIMATIONS ===== */
-        .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s ease-out; }
-        .reveal.active { opacity: 1; transform: translateY(0); }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
-            .hero-title { font-size: 2.5rem; }
-            .section-title { font-size: 2rem; }
-            .flag-row { grid-template-columns: 1fr; gap: 5px; padding: 15px 0; }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>명조 3.1 - 라하이 로이 스토리 정리 및 분석</title>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-base:#0b0c15;
+      --bg-deep:#080912;
+      --text-main:#f8fafc;
+      --text-muted:#a8b3c7;
+      --accent-cyan:#a8d8ff;
+      --accent-purple:#d8a8ff;
+      --accent-gold:#ffe7a8;
+      --card-bg:linear-gradient(135deg,rgba(33,33,44,.52) 0%,rgba(20,20,30,.72) 100%);
+      --card-border:rgba(168,216,255,.16);
+      --card-hover:rgba(216,168,255,.38);
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      font-family:'Pretendard',sans-serif;
+      background:
+        radial-gradient(circle at top left,rgba(168,216,255,.08),transparent 34%),
+        radial-gradient(circle at top right,rgba(216,168,255,.08),transparent 30%),
+        linear-gradient(to bottom,#0b0c15,#13111c,#080912);
+      color:var(--text-main);
+      line-height:1.85;
+      overflow-x:hidden;
+      background-attachment:fixed;
+    }
+    .font-playfair{font-family:'Playfair Display',serif}
+    .gradient-text{
+      background:linear-gradient(135deg,var(--accent-cyan),var(--accent-purple),var(--accent-gold));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .hero{
+      position:relative;
+      min-height:92vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      overflow:hidden;
+      padding:80px 20px;
+    }
+    .hero-bg{
+      position:absolute;
+      inset:0;
+      background:url('https://hw-media-cdn-mingchao.kurogame.com/object/1770220800000/ginxxvuif59erjxbtj-1770259205730.jpg') center/cover;
+      filter:saturate(.82) brightness(.72);
+      z-index:-2;
+    }
+    .hero::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(to bottom,rgba(8,9,18,.25),rgba(8,9,18,.78) 62%,#0b0c15 100%);
+      z-index:-1;
+    }
+    .hero-content{max-width:980px}
+    .eyebrow{
+      letter-spacing:.3em;
+      color:var(--accent-cyan);
+      font-size:.9rem;
+      font-weight:700;
+      margin-bottom:18px;
+    }
+    .hero-title{
+      font-size:clamp(3rem,8vw,6.7rem);
+      font-weight:900;
+      line-height:1.05;
+      margin-bottom:22px;
+      text-shadow:0 6px 20px rgba(0,0,0,.55);
+    }
+    .hero-subtitle{
+      font-size:clamp(1.4rem,3vw,2.2rem);
+      color:#e2e8f0;
+      margin-bottom:18px;
+      font-weight:600;
+    }
+    .hero-desc{
+      color:var(--text-muted);
+      font-size:1.16rem;
+      max-width:780px;
+      margin:0 auto 38px;
+    }
+    .nav{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:12px;
+      margin-top:26px;
+    }
+    .nav a{
+      color:#07101a;
+      background:rgba(168,216,255,.9);
+      text-decoration:none;
+      padding:11px 18px;
+      border-radius:999px;
+      font-weight:800;
+      font-size:.95rem;
+      transition:.25s;
+    }
+    .nav a:hover{transform:translateY(-2px);background:white}
+    .section{
+      max-width:1180px;
+      margin:0 auto;
+      padding:100px 20px;
+    }
+    .section-title{
+      font-size:clamp(2rem,4vw,3.2rem);
+      text-align:center;
+      margin-bottom:18px;
+      color:var(--accent-purple);
+      font-weight:800;
+    }
+    .section-lead{
+      text-align:center;
+      color:var(--text-muted);
+      max-width:860px;
+      margin:0 auto 46px;
+      font-size:1.12rem;
+    }
+    .grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:26px}
+    .grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+    .grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+    .card{
+      background:var(--card-bg);
+      border:1px solid var(--card-border);
+      border-radius:18px;
+      padding:30px;
+      backdrop-filter:blur(14px);
+      box-shadow:0 14px 40px rgba(0,0,0,.22);
+      transition:.28s;
+    }
+    .card:hover{
+      border-color:var(--card-hover);
+      transform:translateY(-4px);
+      box-shadow:0 18px 48px rgba(0,0,0,.32);
+    }
+    .card-title{
+      color:var(--accent-cyan);
+      font-size:1.38rem;
+      font-weight:800;
+      margin-bottom:12px;
+    }
+    .card-sub{
+      color:var(--accent-gold);
+      font-weight:800;
+      font-size:.92rem;
+      letter-spacing:.08em;
+      margin-bottom:8px;
+    }
+    .card-text{color:var(--text-muted);font-size:1.06rem}
+    strong{color:#fff}
+    .banner-card{
+      margin-top:28px;
+      background:linear-gradient(to right,rgba(168,216,255,.08),rgba(216,168,255,.08));
+      border-left:4px solid var(--accent-purple);
+      border-radius:14px;
+      padding:32px;
+    }
+    .timeline{position:relative;padding-left:34px}
+    .timeline::before{
+      content:"";
+      position:absolute;
+      left:12px;
+      top:6px;
+      bottom:6px;
+      width:2px;
+      background:linear-gradient(to bottom,var(--accent-cyan),var(--accent-purple),var(--accent-gold));
+    }
+    .timeline-item{position:relative;margin-bottom:30px}
+    .timeline-item:last-child{margin-bottom:0}
+    .timeline-item::before{
+      content:"";
+      position:absolute;
+      left:-29px;
+      top:8px;
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:var(--bg-base);
+      border:3px solid var(--accent-cyan);
+      box-shadow:0 0 12px rgba(168,216,255,.9);
+    }
+    .timeline-time{display:block;color:var(--accent-purple);font-weight:900;font-size:1.1rem;margin-bottom:4px}
+    .quote{
+      font-size:1.32rem;
+      text-align:center;
+      color:#fff;
+      padding:34px;
+      border-radius:18px;
+      border:1px solid rgba(255,231,168,.3);
+      background:linear-gradient(135deg,rgba(255,231,168,.08),rgba(216,168,255,.08));
+    }
+    .tag{
+      display:inline-block;
+      color:#07101a;
+      background:var(--accent-gold);
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:.82rem;
+      font-weight:900;
+      margin-bottom:14px;
+    }
+    .mini-list{list-style:none;margin-top:12px}
+    .mini-list li{color:var(--text-muted);padding-left:18px;position:relative;margin-bottom:8px}
+    .mini-list li::before{content:"✦";position:absolute;left:0;color:var(--accent-cyan)}
+    footer{
+      text-align:center;
+      padding:44px 20px;
+      color:var(--text-muted);
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+    @media(max-width:760px){
+      .section{padding:70px 16px}
+      .grid-2{grid-template-columns:1fr}
+      .card{padding:24px}
+      .nav a{font-size:.86rem;padding:9px 13px}
+    }
+  </style>
 </head>
 <body>
+  <header class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <div class="eyebrow">WUTHERING WAVES 3.1 STORY ANALYSIS</div>
+      <h1 class="hero-title font-playfair gradient-text">라하이 로이<br>스토리 정리 및 분석</h1>
+      <p class="hero-subtitle font-playfair">눈속에 있는 그대에게</p>
+      <p class="hero-desc">
+        본 문서는 명조 3.1 라하이 로이 에피소드를 <strong>세계관 배경, 사건 전개, 시간순 인과관계, 에이메스와 방랑자의 감정선</strong> 중심으로 정리한 스토리 분석 포트폴리오입니다.
+      </p>
+      <nav class="nav">
+        <a href="#overview">개요</a>
+        <a href="#world">세계관 배경</a>
+        <a href="#summary">스토리 정리</a>
+        <a href="#timeline">시간순 정리</a>
+        <a href="#analysis">핵심 분석</a>
+        <a href="#ending">결말 해석</a>
+      </nav>
+    </div>
+  </header>
 
-    <!-- HERO SECTION -->
-    <header class="hero" id="hero">
-        <div class="hero-bg" id="parallax-bg"></div>
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h1 class="hero-title font-playfair gradient-text">명조 3.1</h1>
-            <p class="hero-subtitle font-playfair">눈속에 있는 그대에게</p>
-            <p class="card-text" style="margin-bottom: 3rem;">
-                명조: 워더링 웨이브 3장 '라하이 로이' 에피소드의<br>서사 구조와 기획 기법
-            </p>
-            <div class="bounce-arrow"></div>
-        </div>
-    </header>
+  <section id="overview" class="section">
+    <h2 class="section-title font-playfair">이 이야기는 “시간여행”보다 “상호 구원”에 가깝다</h2>
+    <p class="section-lead">
+      라하이 로이 에피소드는 표면적으로는 보이드 스페이스, 알레프-원, 엑소스트라이더, 스트라이더 게이트가 얽힌 SF 서사다. 그러나 핵심은 복잡한 설정이 아니라, 서로를 구하려다 서로의 인생을 만들어낸 <strong>방랑자와 에이메스의 닫힌 인과</strong>에 있다.
+    </p>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-sub">CORE 01</div>
+        <h3 class="card-title font-playfair">방랑자의 잃어버린 과거</h3>
+        <p class="card-text">방랑자는 과거 라하이 로이에서 어린 에이메스를 돌봤지만, 현재 시점에서는 그 기억을 잃은 상태다. 이야기는 방랑자가 잊은 관계를 다시 마주하는 과정으로 시작된다.</p>
+      </div>
+      <div class="card">
+        <div class="card-sub">CORE 02</div>
+        <h3 class="card-title font-playfair">에이메스의 자기희생</h3>
+        <p class="card-text">에이메스는 방랑자의 고향에 대한 진실, 시길룸의 정체, 라하이 로이를 유지하기 위한 자신의 운명을 알고도 혼자 감당한다.</p>
+      </div>
+      <div class="card">
+        <div class="card-sub">CORE 03</div>
+        <h3 class="card-title font-playfair">닫힌 인과 루프</h3>
+        <p class="card-text">미래의 에이메스가 과거를 구했기 때문에 라하이 로이가 존재하고, 그 라하이 로이에서 방랑자가 어린 에이메스를 구했기 때문에 미래의 에이메스가 탄생한다.</p>
+      </div>
+    </div>
+  </section>
 
-    <!-- 01. OVERVIEW -->
-    <section id="overview" class="section reveal">
-        <h2 class="section-title font-playfair">복잡한 SF를 감정 UX로 번역하는 설계</h2>
-        <p class="card-text" style="text-align: center; margin-bottom: 3rem; max-width: 800px; margin-inline: auto;">
-            본 분석은 '라하이 로이' 에피소드를 시나리오 텍스트가 아니라, 퀘스트 목표·데이터 수집·전투 기믹·연출 트리거가 결합된 <span style="color: var(--accent-cyan); font-weight: bold;">시스템형 내러티브</span>로 역설계합니다.
+  <section id="world" class="section">
+    <h2 class="section-title font-playfair">세계관 배경: 직정, 하늘바다, 엑소스트라이더</h2>
+    <p class="section-lead">
+      라하이 로이 스토리는 갑자기 등장한 에피소드가 아니라, 1장 금주 스토리에서 언급된 직정, 역행비, 시간 제어 기술, 하늘바다 연구와 연결된다.
+    </p>
+    <div class="grid-2">
+      <div class="card">
+        <h3 class="card-title font-playfair">직정과 역행비</h3>
+        <p class="card-text">
+          직정은 고대 문명의 기술과 시간 현상을 연구하던 집단이다. 금주 스토리에서는 과거를 재현하는 비정상 현상인 역행비를 이용해 “신의 자취”를 재현하려 했고, 승소산에서는 수호신의 시간 제어 능력과 관련된 역류계를 연구했다.
         </p>
-        <div class="grid-3">
-            <div class="card">
-                <h3 class="card-title font-playfair">SETTING</h3>
-                <p class="card-text">결정론적 단일 시간선과 Bootstrap Paradox라는 난해한 하드 SF 구조를 채택한다.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">EMOTION</h3>
-                <p class="card-text">플레이어 체감 정서는 시간 역설이 아니라 가족애, 희생, 구원, 재회 가능성으로 수렴한다.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">GOAL</h3>
-                <p class="card-text">복잡한 인과율이 게임 내 시스템 UX와 어떻게 동기화되는지 기획자 관점에서 분석한다.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- 02. CLOSED LOOP -->
-    <section id="closed-loop" class="section reveal">
-        <h2 class="section-title font-playfair">닫힌 인과 루프는 플롯홀을 차단하는 구조다</h2>
-        <p class="card-text" style="text-align: center; margin-bottom: 3rem; max-width: 800px; margin-inline: auto;">
-            일반적인 타임루프물과 달리, 본 에피소드는 '미래의 개입이 이미 과거에 반영되어 있는' 고정된 시간선을 사용합니다. 이는 시나리오 기획 측면에서 설정 오류(Plot Hole)를 차단하는 강력한 무기입니다.
+      </div>
+      <div class="card">
+        <h3 class="card-title font-playfair">하늘바다와 우주정거장</h3>
+        <p class="card-text">
+          먼 과거 직정은 하늘바다를 연구하기 위해 우주정거장을 띄웠다. 그러나 전세계급 비명 이후 우주정거장은 추락했고, 라하이 로이 편에서 방랑자 일행은 그 잔해를 탐사하며 하늘바다가 공간 이동 통로처럼 기능할 수 있다는 단서를 확인한다.
         </p>
-        <div class="grid-3">
-            <div class="card">
-                <h3 class="card-title font-playfair">RULE</h3>
-                <p class="card-text">시간선은 분기하지 않고 하나의 원인-결과 체계 안에서 닫힌다.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">VALUE</h3>
-                <p class="card-text">"왜 과거가 바뀌지 않는가"라는 타임루프 장르의 주요 설정 오류를 줄인다.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">IMPACT</h3>
-                <p class="card-text">플레이어는 사건을 수정하는 대신, 자신의 행동이 이미 세계의 조건이었다는 운명론적 쾌감을 얻는다.</p>
-            </div>
-        </div>
-        <div class="banner-card">
-            <h3 class="card-title font-playfair">Bootstrap Paradox의 구조</h3>
-            <p class="card-text" style="margin-bottom: 1rem;">
-                라하이 로이의 인과 루프는 전형적인 "결과가 원인을 만드는" 부트스트랩 패러독스입니다. 미래의 에이메스가 과거로 가서 엑소스트라이더를 도와 라하이 로이를 구하기 때문에, 라하이 로이가 존재합니다. 그리고 라하이 로이가 존재하기 때문에 방랑자가 어린 에이메스를 구할 수 있고, 에이메스가 성장해서 미래에 과거로 갈 수 있게 됩니다.
-            </p>
-            <p class="card-text">
-                이 구조에서는 "처음"이 없습니다. 원인과 결과가 무한 루프를 이루며, 모든 사건이 이미 정해진 상태로 존재합니다. 플레이어의 행동도, 에이메스의 희생도, 방랑자의 구출도 모두 이 루프의 필수 요소입니다.
-            </p>
-        </div>
-    </section>
-
-    <!-- 03. CAUSAL EVENTS -->
-    <section id="causal-events" class="section reveal">
-        <h2 class="section-title font-playfair">인과 루프는 세 단계의 상태 변화로 완성된다</h2>
-        <p class="card-text" style="text-align: center; margin-bottom: 3rem; max-width: 800px; margin-inline: auto;">
-            에이메스의 변화 과정은 단순한 스토리가 아니라, 게임 시스템과 연동된 상태 전이(State Transition)입니다. 각 단계마다 에이메스의 능력과 역할이 변화하며, 이것이 인과 루프를 완성시킵니다.
+      </div>
+      <div class="card">
+        <h3 class="card-title font-playfair">엑소스트라이더와 스트라이더 게이트</h3>
+        <p class="card-text">
+          엑소스트라이더는 방랑자의 고향과 관련된 기술로 추정되는 거대 운반체이며, 스트라이더 게이트를 통해 나타난 알레프-원을 막는 역할을 한다. 하지만 본래의 힘만으로는 알레프-원을 완전히 밀어낼 수 없었다.
         </p>
-        <div class="grid-2">
-            <div class="card">
-                <h3 class="card-title font-playfair">PHASE 1: 불완전한 공명자</h3>
-                <p class="card-text">에이메스가 엑소스트라이더와 처음 공명할 때 "적격자"로서 죽지만, 동시에 전자 유령 상태의 불완전한 공명자가 된다. 이 상태에서는 시간 역행이 불가능하다.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">PHASE 2: 완전한 공명자</h3>
-                <p class="card-text">방랑자와 함께 시길룸을 쓰러뜨린 후, 에이메스는 완전한 엑소스트라이더 공명자가 된다. 이제 보이드 스페이스의 특수성을 통해 과거로 시간 역행할 수 있는 능력을 얻는다.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">PHASE 3: 시간 역행과 희생</h3>
-                <p class="card-text">완전한 공명자가 된 에이메스는 보이드 스페이스를 통해 과거로 돌아가 엑소스트라이더를 도와 알레프-원을 격퇴하고 게이트를 봉인한다. 하지만 이 과정에서 스트라이더 게이트 너머로 영원히 갇힌다.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">PHASE 4: 새로운 형태의 존재</h3>
-                <p class="card-text">태양의 정령이 호신부를 매개로 에이메스의 주파수를 구현시켜, 새로운 형태의 생명체(엑소스웜)로 에이메스가 돌아온다. 이것은 완전한 복구가 아니라, 다른 형태의 존재로의 변화다.</p>
-            </div>
-        </div>
-        
-        <div class="banner-card" style="border-left-color: var(--accent-cyan);">
-            <h3 class="card-title font-playfair" style="color: var(--accent-purple);">호신부: 인과 루프의 매개체</h3>
-            <p class="card-text" style="margin-bottom: 1rem;">호신부는 단순한 아이템이 아닙니다. 이것은 인과 루프의 물리적 증거이자, 모든 사건을 연결하는 매개체입니다:</p>
-            <ul class="custom-list" style="margin-bottom: 1.5rem;">
-                <li>어린 에이메스가 잃어버린 호신부</li>
-                <li>현재의 방랑자가 호수에서 구하지 못한 에이메스 대신 남겨진 것</li>
-                <li>태양의 정령이 에이메스의 육체를 구현하는 매개가 되는 것</li>
-                <li>플레이어에게 "에이메스는 아직 살아있다"는 확신을 주는 증거</li>
-            </ul>
-            <p class="card-text" style="margin-bottom: 0.5rem;"><strong style="color: var(--accent-cyan);">기획적 핵심:</strong> 사건의 시작점과 종착점을 동일하게 설계해, 플레이어 행동을 세계 존속의 필수 조건으로 만든다.</p>
-            <p class="card-text" style="margin-bottom: 0.5rem;"><strong style="color: var(--accent-cyan);">감정적 효과:</strong> "내가 구했기 때문에 그녀가 구했다"는 상호 구원 구조가 운명론적 카타르시스로 작동한다.</p>
-            <p class="card-text"><strong style="color: var(--accent-cyan);">시스템 요구:</strong> 각 시간대의 에이메스는 동일 인물이지만, 퀘스트 플래그상 독립 상태 객체로 관리되어야 한다.</p>
-        </div>
-    </section>
+      </div>
+      <div class="card">
+        <h3 class="card-title font-playfair">알레프-원</h3>
+        <p class="card-text">
+          알레프-원은 솔라리스 외부에서 온 명식으로, 블랙홀처럼 모든 것을 삼키는 “허무”의 성질을 지닌 존재로 묘사된다. 그 내부인 보이드 스페이스는 시간과 공간이 뒤섞인 특수한 영역이다.
+        </p>
+      </div>
+    </div>
+  </section>
 
-    <!-- 04. STATE FLAGS -->
-    <section id="state-flags" class="section reveal">
-        <h2 class="section-title font-playfair">시간선 설계는 캐릭터 상태값 관리의 문제다</h2>
-        <div class="grid-3" style="margin-bottom: 3rem;">
-            <div class="card">
-                <h3 class="card-title font-playfair">PAST</h3>
-                <p class="card-text"><strong>어린 에이메스: 구원의 원점</strong><br>호수 사건의 대상이자 루프가 감정적으로 시작되는 지점. 플레이어에게는 "구해야 할 아이"로 인지된다.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">PRESENT</h3>
-                <p class="card-text"><strong>전자 유령 상태: 복구 중인 Entity</strong><br>주파수 수집에 따라 존재감이 갱신되는 상태. 퀘스트 진행률이 곧 관계 회복의 체감값이 된다.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">FUTURE</h3>
-                <p class="card-text"><strong>희생을 선택한 에이메스: 세계 존속 조건</strong><br>과거로 넘어가 명식을 봉인하는 행위자. 개인 서사가 세계 유지 로직으로 확장된다.</p>
-            </div>
-        </div>
-        
-        <div class="card" style="padding: 20px 40px;">
-            <div class="flag-row" style="border-bottom: 2px solid var(--accent-purple);">
-                <div class="flag-name" style="color: var(--text-main);">FLAG MANAGEMENT</div>
-                <div style="color: var(--text-main); font-weight: bold;">상태 연동</div>
-            </div>
-            <div class="flag-row"><div class="flag-name">MEMORY</div><div class="card-text">상태 추적</div></div>
-            <div class="flag-row"><div class="flag-name">LOCATION</div><div class="card-text">상태 추적</div></div>
-            <div class="flag-row"><div class="flag-name">BODY</div><div class="card-text">상태 추적</div></div>
-            <div class="flag-row"><div class="flag-name">GATE</div><div class="card-text">상태 추적</div></div>
-            <div class="flag-row" style="border: none;"><div class="flag-name">PLAYER VIEW</div><div class="card-text">상태 추적</div></div>
-        </div>
-    </section>
+  <section id="summary" class="section">
+    <h2 class="section-title font-playfair">스토리 정리: 현재 시점의 라하이 로이</h2>
+    <p class="section-lead">
+      현재 시점의 이야기는 방랑자가 에이메스를 다시 만나고, 그녀의 존재를 복구하며, 시길룸의 진실과 에이메스의 결심을 마주하는 흐름으로 진행된다.
+    </p>
+    <div class="grid-2">
+      <div class="card">
+        <span class="tag">PART 1</span>
+        <h3 class="card-title font-playfair">수업에서 만난 보이지 않는 소녀</h3>
+        <p class="card-text">
+          방랑자는 루실라 교장의 수업에서 분홍머리 소녀 에이메스를 만난다. 그러나 다른 학생들은 그녀를 보지 못한다. 루실라는 에이메스가 10여 년 전 엑소스트라이더 적격자 훈련 중 사라진 학생이라고 설명하고, 방랑자는 그녀의 흔적을 따라 훈련장으로 향한다.
+        </p>
+      </div>
+      <div class="card">
+        <span class="tag">PART 2</span>
+        <h3 class="card-title font-playfair">전자 유령 에이메스와 시길룸</h3>
+        <p class="card-text">
+          훈련장에서 방랑자는 시길룸의 습격을 받고, 에이메스가 그를 구한다. 에이메스는 자신이 과거 엑소스트라이더와 공명한 대가로 육체를 잃은 전자 유령이라고 밝힌다. 시길룸은 방랑자의 주파수와 리액터 코어를 노리는 존재다.
+        </p>
+      </div>
+      <div class="card">
+        <span class="tag">PART 3</span>
+        <h3 class="card-title font-playfair">에이메스의 흔적을 따라가는 여정</h3>
+        <p class="card-text">
+          방랑자는 리액터 코어를 통해 에이메스의 주파수와 기억을 모은다. 아카데미 강당에서는 그녀가 플릿 스노우플러프라는 가수였음을 알게 되고, 빙원에서는 그녀의 가족, 동료, 과거의 상처를 하나씩 확인한다.
+        </p>
+      </div>
+      <div class="card">
+        <span class="tag">PART 4</span>
+        <h3 class="card-title font-playfair">직정 우주정거장의 단서</h3>
+        <p class="card-text">
+          빙원에서 니보라와 루크를 만난 일행은 추락한 직정 우주정거장에 들어간다. 그곳에서 하늘바다 연구, 방랑자가 추락하는 영상, 루크가 방랑자의 정체를 알고 있다는 사실이 드러난다.
+        </p>
+      </div>
+      <div class="card">
+        <span class="tag">PART 5</span>
+        <h3 class="card-title font-playfair">시길룸의 정체와 고향의 진실</h3>
+        <p class="card-text">
+          엑소스트라이더 내부에서 시길룸과 싸우던 방랑자는 에이메스의 마음속 세계로 들어간다. 에이메스는 방랑자가 고향으로 돌아가고 싶어 했지만, 고향이 그 바람을 거절했다는 진실을 알고 있었고, 이 사실을 숨기려 했음을 고백한다.
+        </p>
+      </div>
+      <div class="card">
+        <span class="tag">PART 6</span>
+        <h3 class="card-title font-playfair">완전한 공명자와 마지막 선택</h3>
+        <p class="card-text">
+          시길룸을 극복한 뒤 에이메스는 완전한 엑소스트라이더 공명자가 된다. 하지만 그녀는 라하이 로이를 존재하게 만들기 위해 과거로 돌아가야 함을 알고 있었고, 결국 방랑자의 만류를 뒤로한 채 보이드 스페이스로 떠난다.
+        </p>
+      </div>
+    </div>
+  </section>
 
-    <!-- 05. STORY SUMMARY & 06. TIMELINE -->
-    <section id="story-summary" class="section reveal">
-        <h2 class="section-title font-playfair">라하이 로이 에피소드의 완전한 이야기</h2>
-        <div class="grid-2">
-            <div class="card">
-                <h3 class="card-title font-playfair">시길룸의 탄생과 진실</h3>
-                <p class="card-text">에이메스는 보이드 스페이스에서 방랑자의 주파수를 발견하고, 그것을 따라 진실을 알게 됩니다. 고향이 그녀의 소원을 거부했다는 사실에 처음으로 증오를 느끼고, 이 감정이 보이드매터에 오염되어 시길룸이 탄생합니다.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">시길룸과의 대면</h3>
-                <p class="card-text">방랑자는 에이메스의 심상 공간에서 시길룸을 만나고, 누군가를 구하는 것이 아니라 함께했을 뿐임을 밝힙니다. 에이메스는 완전한 엑소스트라이더의 공명자가 되고 시길룸은 사라집니다.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">인과의 루프 완성</h3>
-                <p class="card-text">에이메스는 과거로 돌아가 엑소스트라이더와 공명하여 게이트를 봉인합니다. 방랑자는 호수에서 어린 에이메스를 구하려 하지만 실패하고, 과거의 방랑자가 나타나 잡아줌으로써 인과가 연결됩니다.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">새로운 존재</h3>
-                <p class="card-text">태양의 정령이 에이메스의 호신부를 매개로 육체를 구현시킵니다. 말할 수 없고 움직일 수 없지만, 종이 비행기를 날리며 메시지를 남깁니다. 방랑자는 그녀가 살아있음을 확신합니다.</p>
-            </div>
-        </div>
+  <section id="timeline" class="section">
+    <h2 class="section-title font-playfair">시간순 정리: 사건은 이렇게 맞물린다</h2>
+    <p class="section-lead">
+      이 에피소드를 이해하기 가장 어려운 이유는 “플레이어가 보는 순서”와 “세계관 내부의 실제 시간순”이 다르기 때문이다. 아래는 세계관 내부 시간순 기준의 정리다.
+    </p>
+    <div class="timeline card">
+      <div class="timeline-item">
+        <span class="timeline-time">1. 먼 과거 · 알레프-원의 침입</span>
+        <p class="card-text">스트라이더 게이트를 통해 알레프-원이 나타나고, 엑소스트라이더는 이를 막으려 하지만 역부족이다.</p>
+      </div>
+      <div class="timeline-item">
+        <span class="timeline-time">2. 미래 에이메스의 개입</span>
+        <p class="card-text">미래에서 온 에이메스가 보이드 스페이스를 통해 과거로 이동해 엑소스트라이더와 공명한다. 이 힘으로 알레프-원은 게이트 너머로 밀려나고 라하이 로이는 멸망을 피한다.</p>
+      </div>
+      <div class="timeline-item">
+        <span class="timeline-time">3. 어린 에이메스의 탄생과 상실</span>
+        <p class="card-text">로야족과 스페이스트렉 연구원 사이에서 에이메스가 태어난다. 부모는 보이드 스톰에 휩쓸려 사라지고, 에이메스는 부모의 기억마저 잊을까 두려워 빙원으로 향한다.</p>
+      </div>
+      <div class="timeline-item">
+        <span class="timeline-time">4. 호수 사건과 두 명의 방랑자</span>
+        <p class="card-text">어린 에이메스가 호수에 빠지고, 미래의 방랑자가 아래에서 밀어올린다. 과거의 방랑자는 위에서 그녀를 건져 올린다. 이 과정에서 호신부는 현재의 방랑자 손에 남는다.</p>
+      </div>
+      <div class="timeline-item">
+        <span class="timeline-time">5. 과거의 방랑자와 에이메스의 가족 관계</span>
+        <p class="card-text">과거의 방랑자는 어린 에이메스를 자식처럼 돌본다. 에이메스는 방랑자의 고향에 대한 그리움과 구세주로서의 짐을 보며, 언젠가 자신이 그 짐을 덜어주겠다는 마음을 품는다.</p>
+      </div>
+      <div class="timeline-item">
+        <span class="timeline-time">6. 방랑자의 이별과 기억 상실</span>
+        <p class="card-text">방랑자는 에이메스를 라하이 로이에 남기고 떠난다. 이후 어떤 이유로 기억을 잃고, 현재 시점의 방랑자는 에이메스를 기억하지 못한다.</p>
+      </div>
+      <div class="timeline-item">
+        <span class="timeline-time">7. 에이메스의 실종과 전자 유령화</span>
+        <p class="card-text">에이메스는 엑소스트라이더 적격자 훈련 중 봉인이 풀리는 사태를 막기 위해 오버클럭으로 공명한다. 그 결과 육체를 잃고 전자 유령 상태가 된다.</p>
+      </div>
+      <div class="timeline-item">
+        <span class="timeline-time">8. 시길룸의 탄생</span>
+        <p class="card-text">에이메스는 보이드 스페이스에서 방랑자의 주파수와 고향의 진실을 접한다. 방랑자를 향한 걱정, 분노, 두려움이 보이드매터에 오염되며 시길룸이 태어난다.</p>
+      </div>
+      <div class="timeline-item">
+        <span class="timeline-time">9. 현재 · 방랑자와 에이메스의 재회</span>
+        <p class="card-text">현재의 방랑자는 라하이 로이에서 에이메스를 다시 만나고, 그녀의 존재를 복구하며 시길룸을 쓰러뜨린다.</p>
+      </div>
+      <div class="timeline-item">
+        <span class="timeline-time">10. 에이메스의 시간 역행과 루프 완성</span>
+        <p class="card-text">완전한 공명자가 된 에이메스는 과거로 향해 엑소스트라이더와 공명하고 알레프-원을 봉인한다. 이로써 라하이 로이와 자신의 존재를 가능하게 한 닫힌 인과 루프가 완성된다.</p>
+      </div>
+    </div>
+  </section>
 
-        <h2 class="section-title font-playfair" style="margin-top: 6rem; margin-bottom: 2rem;">인과 루프의 시간 구조</h2>
-        <div class="timeline card">
-            <div class="timeline-item">
-                <span class="timeline-time">십몇 년 전</span>
-                <p class="timeline-desc">에이메스가 엑소스트라이더와 공명하여 사망 → 전자 유령 상태로 변환</p>
-            </div>
-            <div class="timeline-item">
-                <span class="timeline-time">과거 (라하이 로이)</span>
-                <p class="timeline-desc">방랑자가 호수에서 어린 에이메스를 구출 (인과의 시작점)</p>
-            </div>
-            <div class="timeline-item">
-                <span class="timeline-time">현재 (에피소드)</span>
-                <p class="timeline-desc">에이메스와 방랑자가 시길룸을 쓰러뜨림 → 완전한 공명 달성</p>
-            </div>
-            <div class="timeline-item">
-                <span class="timeline-time">미래 (시간 역행)</span>
-                <p class="timeline-desc">에이메스가 보이드 스페이스를 통해 과거로 이동 → 알레프-원 격퇴 → 게이트 봉인</p>
-            </div>
-            <div class="timeline-item" style="margin-bottom: 0;">
-                <span class="timeline-time">현재 (재귀)</span>
-                <p class="timeline-desc">태양의 정령이 에이메스의 호신부로 그녀의 육체 구현</p>
-            </div>
-        </div>
-    </section>
+  <section id="analysis" class="section">
+    <h2 class="section-title font-playfair">스토리 분석: 이 에피소드가 강한 이유</h2>
+    <p class="section-lead">
+      라하이 로이 편의 강점은 복잡한 SF 설정을 감정선으로 끌어내린다는 점이다. 플레이어가 기억해야 하는 것은 용어가 아니라, “누가 누구를 위해 무엇을 감췄고, 무엇을 선택했는가”다.
+    </p>
+    <div class="grid-2">
+      <div class="card">
+        <h3 class="card-title font-playfair">1. 에이메스는 보호받는 아이에서 보호하는 인물로 바뀐다</h3>
+        <p class="card-text">
+          어린 에이메스는 방랑자에게 구조되고 돌봄을 받는다. 그러나 성장한 에이메스는 방랑자의 고향에 대한 고통을 알게 된 뒤, 이번에는 자신이 방랑자를 지키려 한다. 이 전환이 에이메스의 희생을 단순한 비극이 아니라 능동적 선택으로 만든다.
+        </p>
+      </div>
+      <div class="card">
+        <h3 class="card-title font-playfair">2. 시길룸은 적이면서 방랑자의 그림자다</h3>
+        <p class="card-text">
+          시길룸은 단순한 보스가 아니다. 방랑자의 “고향으로 돌아가고 싶다”는 바람, 에이메스의 불안, 보이드매터의 오염이 섞여 탄생한 존재다. 그래서 시길룸과의 전투는 외부의 적을 쓰러뜨리는 싸움이면서, 방랑자가 과거의 미련과 마주하는 장면이 된다.
+        </p>
+      </div>
+      <div class="card">
+        <h3 class="card-title font-playfair">3. 방랑자의 선택은 ‘귀환’이 아니라 ‘정착’이다</h3>
+        <p class="card-text">
+          방랑자는 고향이 자신을 거절했다는 진실을 듣는다. 그러나 그는 고향으로 돌아가지 못한 상실보다, 지금 자신이 함께한 사람들과 솔라리스에 남고 싶다는 마음을 선택한다. 이 대답이 에이메스의 오랜 불안과 죄책감을 해소한다.
+        </p>
+      </div>
+      <div class="card">
+        <h3 class="card-title font-playfair">4. 호신부는 구원 실패의 증거이자 재회의 실마리다</h3>
+        <p class="card-text">
+          방랑자는 어린 에이메스를 완전히 구하지 못하고 호신부만 손에 쥔다. 그러나 그 호신부는 나중에 태양의 정령이 에이메스의 육체를 구현하는 매개가 된다. 즉, 실패처럼 보인 사건이 다음 구원의 가능성으로 전환된다.
+        </p>
+      </div>
+    </div>
+    <div class="banner-card">
+      <h3 class="card-title font-playfair">핵심 해석</h3>
+      <p class="card-text">
+        이 이야기는 “에이메스가 방랑자를 구했고, 방랑자가 에이메스를 구했다”로 끝나지 않는다. 정확히는 <strong>서로가 서로의 존재 조건이 되었다</strong>. 에이메스가 과거로 가지 않았다면 라하이 로이는 존재하지 않고, 라하이 로이가 존재하지 않았다면 방랑자는 어린 에이메스를 구할 수 없으며, 어린 에이메스가 구원받지 않았다면 미래의 에이메스도 존재하지 않는다.
+      </p>
+    </div>
+  </section>
 
-    <!-- 07. RESTORE FLOW & 08. BOSS MECHANICS -->
-    <section class="section reveal">
-        <h2 class="section-title font-playfair">주파수 수집과 보스 기믹</h2>
-        <div class="grid-2">
-            <!-- 07. Restore Flow -->
-            <div>
-                <h3 class="font-playfair gradient-text" style="font-size: 2rem; margin-bottom: 1.5rem; text-align: center;">관계 복구의 UX</h3>
-                <div class="card" style="margin-bottom: 20px; padding: 25px;">
-                    <h4 class="card-title font-playfair" style="font-size: 1.2rem;">PHASE 1 · 인식</h4>
-                    <p class="card-text">플레이어는 에이메스의 존재를 감지하고 도움이 필요함을 알게 된다.</p>
-                </div>
-                <div class="card" style="margin-bottom: 20px; padding: 25px;">
-                    <h4 class="card-title font-playfair" style="font-size: 1.2rem;">PHASE 2 · 수집</h4>
-                    <p class="card-text">주파수를 모으면서 에이메스의 기억과 감정이 점진적으로 복구된다.</p>
-                </div>
-                <div class="card" style="margin-bottom: 20px; padding: 25px;">
-                    <h4 class="card-title font-playfair" style="font-size: 1.2rem;">PHASE 3 · 상호작용</h4>
-                    <p class="card-text">복구된 에이메스와의 상호작용이 가능해지고, 관계의 깊이가 증가한다.</p>
-                </div>
-                <div class="card" style="padding: 25px;">
-                    <h4 class="card-title font-playfair" style="font-size: 1.2rem;">PHASE 4 · 완성</h4>
-                    <p class="card-text">완전한 복구를 통해 플레이어와 에이메스의 감정적 유대가 확립된다.</p>
-                </div>
-            </div>
+  <section id="ending" class="section">
+    <h2 class="section-title font-playfair">결말 해석: 슬픈 엔딩이지만 완전한 이별은 아니다</h2>
+    <p class="section-lead">
+      에이메스는 알레프-원을 봉인하는 과정에서 스트라이더 게이트 너머에 갇힌다. 하지만 이야기는 그녀의 완전한 소멸로 끝나지 않는다.
+    </p>
+    <div class="grid-3">
+      <div class="card">
+        <h3 class="card-title font-playfair">에이메스의 희생</h3>
+        <p class="card-text">에이메스는 자신이 과거로 가야 라하이 로이가 존재할 수 있음을 알고 떠난다. 방랑자가 막는 데 성공했다면, 오히려 현재의 라하이 로이는 성립하지 않는다.</p>
+      </div>
+      <div class="card">
+        <h3 class="card-title font-playfair">빈 육체의 등장</h3>
+        <p class="card-text">태양의 정령은 호신부에 남은 주파수를 이용해 에이메스의 육체를 구현한다. 이 존재는 인간도 잔향도 아닌 엑소스웜에 가까운 생명체로 설명된다.</p>
+      </div>
+      <div class="card">
+        <h3 class="card-title font-playfair">재회의 가능성</h3>
+        <p class="card-text">움직이지도 말하지도 못하던 에이메스의 육체가 “슬퍼하지 마세요”라는 말을 남기고 종이비행기를 던지는 장면은, 게이트 너머의 에이메스와 아직 연결이 남아 있음을 암시한다.</p>
+      </div>
+    </div>
 
-            <!-- 08. Boss Mechanics -->
-            <div>
-                <h3 class="font-playfair gradient-text" style="font-size: 2rem; margin-bottom: 1.5rem; text-align: center;">내면 갈등의 외재화</h3>
-                <div class="card" style="height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 20px;">
-                    <p class="card-text" style="margin-bottom: 10px;">시길룸은 에이메스의 증오와 두려움이 투영된 존재입니다. 보스전의 기믹은 심리 상태를 직접적으로 표현합니다.</p>
-                    <div>
-                        <h4 class="card-title font-playfair" style="font-size: 1.2rem; margin-bottom: 5px;">보이드매터 오염</h4>
-                        <p class="card-text">에이메스의 부정적 감정이 보이드매터에 오염되어 탄생.</p>
-                    </div>
-                    <div>
-                        <h4 class="card-title font-playfair" style="font-size: 1.2rem; margin-bottom: 5px;">주파수 간섭</h4>
-                        <p class="card-text">방랑자의 주파수를 간섭하려는 공격은 그녀의 불안감을 표현.</p>
-                    </div>
-                    <div>
-                        <h4 class="card-title font-playfair" style="font-size: 1.2rem; margin-bottom: 5px;">심상 공간 변형</h4>
-                        <p class="card-text">전투 중 환경 변화는 감정 변화를 시각적으로 표현.</p>
-                    </div>
-                    <div>
-                        <h4 class="card-title font-playfair" style="font-size: 1.2rem; margin-bottom: 5px;">감정 해소</h4>
-                        <p class="card-text">보스전을 통해 자신의 감정을 직면하고 해소하는 과정.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+    <div class="quote font-playfair" style="margin-top:34px;">
+      “인과가, 이로써 맞물립니다.”<br>
+      <span style="font-size:1.05rem;color:var(--text-muted);font-family:'Pretendard',sans-serif;">
+        라하이 로이 편의 결말은 비극이 아니라, 다음 구원을 향한 약속으로 끝난다.
+      </span>
+    </div>
+  </section>
 
-    <!-- 09. GLOSSARY -->
-    <section id="glossary" class="section reveal">
-        <h2 class="section-title font-playfair">세계관 용어</h2>
-        <div class="grid-3">
-            <div class="card">
-                <h3 class="card-title font-playfair">엑소스트라이더</h3>
-                <p class="card-text">방랑자의 고향에서 보낸 운반체로, 수호신을 솔라리스로 옮기는 역할. 에이메스와 공명하여 강력한 힘을 발휘.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">보이드 스페이스</h3>
-                <p class="card-text">시간과 공간이 뒤엉킨 특수한 공간으로, 과거와 미래를 잇는 통로. 전자 유령 상태의 에이메스가 활동하는 영역.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">시길룸</h3>
-                <p class="card-text">에이메스의 증오와 두려움이 보이드매터에 오염되어 탄생한 존재. 심리 상태를 구체화한 형상.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">주파수</h3>
-                <p class="card-text">존재의 본질을 나타내는 개념으로, 주파수 수집을 통해 상실된 존재를 복구할 수 있다.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">스트라이더 게이트</h3>
-                <p class="card-text">솔라리스로 통하는 차원의 문으로, 에이메스가 과거로 돌아가 봉인한 장소.</p>
-            </div>
-            <div class="card">
-                <h3 class="card-title font-playfair">호신부</h3>
-                <p class="card-text">에이메스가 어린 시절 잃어버린 부적으로, 태양의 정령이 에이메스의 육체를 구현하는 매개가 된다.</p>
-            </div>
-        </div>
-    </section>
+  <section class="section">
+    <h2 class="section-title font-playfair">최종 정리</h2>
+    <div class="grid-4">
+      <div class="card">
+        <h3 class="card-title font-playfair">구조</h3>
+        <p class="card-text">미래가 과거를 만들고, 과거가 현재를 만드는 닫힌 인과 루프.</p>
+      </div>
+      <div class="card">
+        <h3 class="card-title font-playfair">감정</h3>
+        <p class="card-text">방랑자를 지키고 싶었던 에이메스의 사랑과 불안, 죄책감의 해소.</p>
+      </div>
+      <div class="card">
+        <h3 class="card-title font-playfair">주제</h3>
+        <p class="card-text">고향으로 돌아가는 것이 아니라, 지금 곁에 있는 사람들을 선택하는 이야기.</p>
+      </div>
+      <div class="card">
+        <h3 class="card-title font-playfair">여운</h3>
+        <p class="card-text">호신부와 빈 육체를 통해 에이메스 구출이라는 후속 서사의 가능성을 남김.</p>
+      </div>
+    </div>
+  </section>
 
-    <!-- 10. TECH PLANNER & 11. CONCLUSION -->
-    <section id="conclusion" class="section reveal" style="padding-bottom: 60px;">
-        <h2 class="section-title font-playfair">결론: 작동하는 감정 구조</h2>
-        <div class="grid-4" style="margin-bottom: 3rem;">
-            <div class="card" style="padding: 25px; text-align: center;">
-                <div class="card-title font-playfair">01 · RESCUE</div>
-                <p class="card-text">구출: 관계의 원점이자 시작점</p>
-            </div>
-            <div class="card" style="padding: 25px; text-align: center;">
-                <div class="card-title font-playfair">02 · RESTORE</div>
-                <p class="card-text">수집: 파편을 모아 존재 복구</p>
-            </div>
-            <div class="card" style="padding: 25px; text-align: center;">
-                <div class="card-title font-playfair">03 · CONFRONT</div>
-                <p class="card-text">전투: 내면 갈등을 보스전 치환</p>
-            </div>
-            <div class="card" style="padding: 25px; text-align: center;">
-                <div class="card-title font-playfair">04 · COMMIT</div>
-                <p class="card-text">선택: 미련을 끊고 인연 확정</p>
-            </div>
-        </div>
-
-        <div class="card" style="text-align: center; padding: 60px 40px; background: linear-gradient(135deg, rgba(168,216,255,0.1), rgba(216,168,255,0.05)); border: 1px solid var(--accent-purple);">
-            <h3 class="font-playfair gradient-text" style="font-size: 2.5rem; margin-bottom: 1rem;">PORTFOLIO POSITION</h3>
-            <p class="card-text" style="font-size: 1.3rem; line-height: 2;">
-                개발 경험을 바탕으로 <strong>플래그 트리, UX Narrative, 글로서리 데이터</strong>를 함께 설계하는<br>
-                <span style="font-size: 1.8rem; font-weight: 700; color: #fff; font-family: 'Playfair Display', serif; display: inline-block; margin-top: 10px;">테크니컬 시나리오 기획자</span>를 지향합니다.
-            </p>
-        </div>
-    </section>
-
-    <footer style="text-align: center; padding: 40px; border-top: 1px solid rgba(255,255,255,0.05); color: var(--text-muted);">
-        <p>© 2026 WUWA Narrative Analysis Portfolio</p>
-    </footer>
-
-    <!-- INTERACTION SCRIPT -->
-    <script>
-        // Parallax effect for Hero background
-        window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
-            const parallaxBg = document.getElementById('parallax-bg');
-            if(parallaxBg && scrolled < window.innerHeight) {
-                parallaxBg.style.transform = `translateY(${scrolled * 0.4}px)`;
-            }
-        });
-
-        // Scroll Reveal Animation
-        const revealElements = document.querySelectorAll('.reveal');
-        
-        const revealObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target); // Trigger once
-                }
-            });
-        }, {
-            threshold: 0.1,
-            rootMargin: "0px 0px -50px 0px"
-        });
-
-        revealElements.forEach(el => revealObserver.observe(el));
-    </script>
+  <footer>
+    <p>© 2026 WUWA 3.1 Lahai-Roi Story Summary & Analysis</p>
+  </footer>
 </body>
 </html>
