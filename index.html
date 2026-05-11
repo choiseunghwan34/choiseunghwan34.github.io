@@ -225,6 +225,82 @@
       color:var(--text-muted);
       border-top:1px solid rgba(255,255,255,.06);
     }
+  .music-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(360px,1fr));
+    gap:26px;
+    align-items:stretch;
+  }
+
+  .music-card{
+    background:var(--card-bg);
+    border:1px solid var(--card-border);
+    border-radius:18px;
+    padding:30px;
+    backdrop-filter:blur(14px);
+    box-shadow:0 14px 40px rgba(0,0,0,.22);
+    transition:.28s;
+  }
+
+  .music-card:hover{
+    transform:translateY(-4px);
+    border-color:var(--card-hover);
+    box-shadow:0 18px 48px rgba(0,0,0,.32);
+  }
+
+  .music-card h3{
+    font-size:1.5rem;
+    font-weight:800;
+    color:var(--accent-cyan);
+    margin-bottom:20px;
+    font-family:'Playfair Display',serif;
+  }
+
+  .music-video{
+    position:relative;
+    width:100%;
+    aspect-ratio:16 / 9;
+    overflow:hidden;
+    border-radius:14px;
+    border:1px solid var(--card-border);
+    margin-bottom:20px;
+    background:#0f172a;
+    box-shadow:0 14px 40px rgba(0,0,0,.22);
+  }
+
+  .music-video iframe{
+    width:100%;
+    height:100%;
+    border:0;
+  }
+
+  .music-desc{
+    color:var(--text-muted);
+    font-size:.875rem;
+    line-height:1.7;
+  }
+
+  .music-desc p + p{
+    margin-top:12px;
+  }
+
+  @media(max-width:760px){
+    .music-grid{
+      grid-template-columns:1fr;
+    }
+
+    .music-card{
+      padding:24px;
+    }
+
+    .music-card h3{
+      font-size:1.35rem;
+    }
+
+    .music-desc{
+      font-size:.875rem;
+    }
+  }
     @media(max-width:760px){
       .section{padding:70px 16px}
       .grid-2{grid-template-columns:1fr}
@@ -450,40 +526,76 @@
   </section>
 
 
-<section class="section">
-  <h2 class="section-title font-playfair">스토리를 담은 음악과 연출</h2>
+<section id="music" class="section">
+  <h2 class="section-title font-playfair">스토리를 담은 음악</h2>
   <p class="section-lead">
-    라하이 로이 에피소드에서 음악은 단순한 배경음악이 아니라, 에이메스의 감정선과 이야기의 반전을 전달하는 중요한 연출 장치로 사용됩니다.
+    라하이 로이 에피소드에서 음악은 단순한 배경음악이 아니라,
+    에이메스의 감정선과 이야기의 반전을 전달하는 중요한 연출 장치로 사용됩니다.
+    특히 공연 장면과 희생 장면의 대비는, 에이메스라는 인물이 무엇을 얻고 무엇을 포기하는지
+    플레이어가 더욱 깊게 체감하도록 만듭니다.
   </p>
 
-  <div class="grid-2">
-    <div class="card">
-      <h3 class="card-title font-playfair">에이메스 공연 BGM</h3>
-      <p class="card-text">
-        에이메스가 무대에서 공연하는 장면의 음악은 밝고 따뜻한 분위기를 만들며, 플레이어에게 이야기가 해피엔딩으로 향하는 듯한 인상을 줍니다. 에이메스가 자신의 꿈과 감정을 노래로 표현하는 장면은 그동안 쌓인 상처가 회복되고, 방랑자와의 관계도 다시 이어질 수 있을 것처럼 느껴지게 만듭니다.
-      </p>
-      <p class="card-text" style="margin-top:14px;">
-        하지만 이 장면의 의미는 바로 다음 전개에서 뒤집힙니다. 공연이 끝난 뒤 이야기는 곧바로 에이메스가 희생을 선택하는 장면으로 이어지며, 앞선 음악이 주었던 행복한 감정은 오히려 이별의 무게를 더 크게 만듭니다. 이 대비 덕분에 플레이어는 에이메스의 선택을 단순한 비극이 아니라, 자신의 마음을 전한 뒤 스스로 운명을 받아들이는 장면으로 받아들이게 됩니다.
-      </p>
-      <p class="card-text" style="margin-top:14px;">
-        참고 BGM: https://youtu.be/GdKJ5FZ0KXc?si=DzbA6PDgPG8Hfd8m
-      </p>
+  <div class="music-grid">
+    <div class="music-card">
+      <h3>에이메스 공연 BGM</h3>
+      <div class="music-video">
+        <iframe
+          width="100%"
+          height="200"
+          src="https://www.youtube-nocookie.com/embed/GdKJ5FZ0KXc?si=7PeIgfY5WTaY0Sq9"
+          title="에이메스 공연 BGM"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <div class="music-desc">
+        <p>
+          에이메스가 공연하는 장면의 음악은 밝고 따뜻한 분위기를 만들며,
+          플레이어에게 이야기가 해피엔딩으로 향하는 듯한 인상을 줍니다.
+          그동안 쌓여온 상처와 불안이 잠시나마 치유되고,
+          에이메스가 자신의 마음을 노래로 전하는 순간처럼 느껴지게 합니다.
+        </p>
+        <p>
+          하지만 이 장면의 진짜 힘은 바로 다음 전개에서 드러납니다.
+          공연이 끝난 직후 이야기는 곧바로 에이메스가 희생을 선택하러 가는 장면으로 이어지고,
+          앞선 음악이 주었던 따뜻함과 행복감은 오히려 이별의 무게를 더 크게 만듭니다.
+          그래서 이 BGM은 단순히 밝은 분위기를 만드는 음악이 아니라,
+          짧은 평온 뒤에 찾아오는 비극을 더욱 선명하게 만드는 감정적 대비 장치로 기능합니다.
+        </p>
+      </div>
     </div>
 
-    <div class="card">
-      <h3 class="card-title font-playfair">에이메스 희생 BGM</h3>
-      <p class="card-text">
-        에이메스가 희생을 선택하고 떠나는 장면의 음악은 앞선 공연 장면과 완전히 다른 감정을 전달합니다. 공연 BGM이 잠시나마 행복한 결말을 기대하게 만들었다면, 희생 장면의 BGM은 그 기대가 무너지는 순간의 슬픔과 결심을 강조합니다.
-      </p>
-      <p class="card-text" style="margin-top:14px;">
-        이 음악이 인상적인 이유는 단순히 슬픈 분위기를 만드는 데서 끝나지 않기 때문입니다. 에이메스는 억지로 희생당하는 인물이 아니라, 라하이 로이를 존재하게 만들기 위해 스스로 선택하는 인물입니다. 그래서 이 장면의 음악은 이별의 슬픔과 동시에, 자신이 해야 할 일을 받아들이는 에이메스의 단단한 의지를 함께 담아냅니다.
-      </p>
-      <p class="card-text" style="margin-top:14px;">
-        공연 장면에서 느껴졌던 따뜻함이 희생 장면에서 상실감으로 바뀌면서, 플레이어는 에이메스가 무엇을 포기했고 왜 떠나야 했는지 더 강하게 체감하게 됩니다. 이처럼 3.1 에피소드는 음악을 통해 해피엔딩의 기대와 비극적 선택의 충격을 대비시키며, 에이메스의 감정선을 더욱 깊게 각인시킵니다.
-      </p>
-      <p class="card-text" style="margin-top:14px;">
-        참고 BGM: https://www.youtube.com/watch?v=0HrdRGuF2Y8
-      </p>
+    <div class="music-card">
+      <h3>에이메스 희생 BGM</h3>
+      <div class="music-video">
+        <iframe
+          width="100%"
+          height="200"
+          src="https://www.youtube-nocookie.com/embed/0HrdRGuF2Y8?si=T7mIeAypto6o0rMj"
+          title="에이메스 희생 BGM"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <div class="music-desc">
+        <p>
+          에이메스가 희생을 선택하고 떠나는 장면의 음악은,
+          앞선 공연 장면의 감정을 정반대로 뒤집으며 슬픔과 결심을 동시에 전달합니다.
+          조금 전까지는 모든 것이 잘 마무리될 것처럼 보였지만,
+          이 음악이 흐르는 순간 플레이어는 에이메스가 스스로 감당해야 할 운명을 직감하게 됩니다.
+        </p>
+        <p>
+          이 BGM이 인상적인 이유는 단순히 슬픈 분위기를 만드는 데서 끝나지 않기 때문입니다.
+          에이메스는 억지로 희생당하는 인물이 아니라,
+          라하이 로이를 존재하게 만들기 위해 스스로 선택하는 인물입니다.
+          그래서 음악은 상실감만이 아니라,
+          자신의 역할을 받아들이는 에이메스의 단단한 의지와 품위를 함께 담아냅니다.
+          공연 장면의 따뜻한 감정이 이 장면에서 비극적 아름다움으로 전환되면서,
+          플레이어는 그녀의 선택이 얼마나 무겁고도 숭고한지 더 깊게 체감하게 됩니다.
+        </p>
+      </div>
     </div>
   </div>
 </section>
